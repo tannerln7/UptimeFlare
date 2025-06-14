@@ -1,4 +1,3 @@
-import type { Env } from './env'
 declare const env: Env
 
 import { MaintenanceConfig, PageConfig, WorkerConfig } from './types/config'
@@ -47,7 +46,7 @@ const workerConfig: WorkerConfig = {
       // [OPTIONAL] headers to be sent
       headers: {
         'User-Agent': 'Uptimeflare',
-        Authorization: 'Bearer ${env.UPPTIME_KEY}',
+        Authorization: `Bearer ${env.UPPTIME_KEY}`,
       },
       // [OPTIONAL] body to be sent
       // body: 'Hello, world!',
@@ -87,7 +86,7 @@ const workerConfig: WorkerConfig = {
       checkProxyFallback: true,
       headers: {
         'User-Agent': 'Uptimeflare',
-        Authorization: 'Bearer ${env.UPPTIME_KEY}',
+        Authorization: `Bearer ${env.UPPTIME_KEY}`,
       },
     },
     {
@@ -103,7 +102,7 @@ const workerConfig: WorkerConfig = {
       checkProxyFallback: true,
       headers: {
         'User-Agent': 'Uptimeflare',
-        Authorization: 'Bearer ${env.UPPTIME_KEY}',
+        Authorization: `Bearer ${env.UPPTIME_KEY}`,
       },
     },
     {
@@ -119,7 +118,7 @@ const workerConfig: WorkerConfig = {
       checkProxyFallback: true,
       headers: {
         'User-Agent': 'Uptimeflare',
-        Authorization: 'Bearer ${env.UPPTIME_KEY}',
+        Authorization: `Bearer ${env.UPPTIME_KEY}`,
       },
     },
     {
@@ -135,7 +134,7 @@ const workerConfig: WorkerConfig = {
       checkProxyFallback: true,
       headers: {
         'User-Agent': 'Uptimeflare',
-        Authorization: 'Bearer ${env.UPPTIME_KEY}',
+        Authorization: `Bearer ${env.UPPTIME_KEY}`,
       },
     },
     {
@@ -175,7 +174,7 @@ const workerConfig: WorkerConfig = {
       checkProxyFallback: true,
       headers: {
         'User-Agent': 'Uptimeflare',
-        Authorization: 'Bearer ${env.UPPTIME_KEY}',
+        Authorization: `Bearer ${env.UPPTIME_KEY}`,
       },
     },
   ],
