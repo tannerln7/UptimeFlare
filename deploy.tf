@@ -1,3 +1,13 @@
+variable "PLEX_URL"      { type = string }
+variable "OVERSEERR_URL" { type = string }
+variable "RADARR_URL"    { type = string }
+variable "SONARR_URL"    { type = string }
+variable "NZBGET_URL"    { type = string }
+variable "UN_SERVER_URL" { type = string }
+variable "CLOUDFLARE_URL"{ type = string }
+variable "HA_URL"        { type = string }
+variable "UPTIME_KEY"    { type = string }
+
 terraform {
   required_providers {
     cloudflare = {
@@ -31,6 +41,17 @@ resource "cloudflare_worker_script" "uptimeflare" {
   kv_namespace_binding {
     name         = "UPTIMEFLARE_STATE"
     namespace_id = cloudflare_workers_kv_namespace.uptimeflare_kv.id
+  }
+	vars = {
+    PLEX        = var.PLEX_URL
+    OVERSEERR   = var.OVERSEERR_URL
+    RADARR      = var.RADARR_URL
+    SONARR      = var.SONARR_URL
+    NZBGET      = var.NZBGET_URL
+    UN_SERVER   = var.UN_SERVER_URL
+    CLOUDFLARE  = var.CLOUDFLARE_URL
+    HA          = var.HA_URL
+    UPTIME_KEY  = var.UPTIME_KEY
   }
 }
 
