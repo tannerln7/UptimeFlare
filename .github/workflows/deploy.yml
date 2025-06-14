@@ -69,7 +69,7 @@ jobs:
           UPTIME_KEY:    ${{ secrets.UPTIME_KEY }}
         run: |
           npm ci
-          npx @cloudflare/next-on-pages build
+          npx @cloudflare/next-on-pages
 
       # 4️⃣ Terraform + durable objects + Pages deploy
       - name: Terraform Apply & Wrangler Pages Deploy
