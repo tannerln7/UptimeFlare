@@ -2,78 +2,65 @@ name: Deploy to Cloudflare
 
 on:
   push:
-    branches: ['main']
+    branches: [main]
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2.0.3
+        uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.6.4
 
-      - name: Use Node.js 22.x
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 22.x
-          cache: 'npm'
+          node-version: 22
+          cache: npm
 
-      # Automatically get an account id via the API Token
-      # if secrets.CLOUDFLARE_ACCOUNT_ID is not set.
-      - name: Fetch Account ID
+      - name: Fetch Cloudflare Account ID
         id: fetch_account_id
-        run: |
-          if [[ -n "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]]; then
-            ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
-            echo "Using provided CLOUDFLARE_ACCOUNT_ID from secrets."
-          else
-            ACCOUNT_ID=$(curl -X GET "https://api.cloudflare.com/client/v4/accounts" -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" -H "Content-Type:application/json" | jq ".result[0].id" -r)
-            if [[ "$ACCOUNT_ID" == "null" ]]; then
-              echo "Failed to get an account id, please make sure you have set up CLOUDFLARE_API_TOKEN correctly!"
-              exit 1
-            fi
-          fi
-          echo 'account_id='$ACCOUNT_ID >> $GITHUB_OUTPUT
-
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-
-      # This is a temporary workaround to fix issue #13
-      # On a new Cloudflare account, the terraform apply will fail with `workers.api.error.subdomain_required`
-      # This may be due to the account not having a worker subdomain yet, so we create a dummy worker and then delete it.
-      # Cloudflare should allocate a worker subdomain after this.
-      # https://github.com/cloudflare/terraform-provider-cloudflare/issues/3304
-      - name: Create worker subdomain (temporary workaround)
-        id: create_dummy_worker
         run: |
-          curl --request PUT --fail-with-body \
-               --url https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/dummy-ib4db6ntj5csdef3 \
-               --header 'Authorization: Bearer '$CLOUDFLARE_API_TOKEN \
-               --header 'Content-Type: application/javascript' \
-               --data 'addEventListener('\''fetch'\'', (event) => event.respondWith(new Response('\''OK'\'')))'\
+          if [[ -n "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]]; then
+            echo "account_id=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" >> $GITHUB_OUTPUT
+          else
+            ID=$(curl -sS \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              https://api.cloudflare.com/client/v4/accounts \
+              | jq -r '.result[0].id')
+            [[ "$ID" != "null" ]] || { echo "No account ID!" >&2; exit 1; }
+            echo "account_id=$ID" >> $GITHUB_OUTPUT
+          fi
 
-          curl --request DELETE --fail-with-body \
-               --url https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/dummy-ib4db6ntj5csdef3 \
-               --header 'Authorization: Bearer '$CLOUDFLARE_API_TOKEN \
-               --header 'Content-Type: application/json'
+      - name: Create dummy worker (subdomain workaround)
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ steps.fetch_account_id.outputs.account_id }}
+        run: |
+          curl -sS -X PUT \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H "Content-Type: application/javascript" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/dummy" \
+            --data 'addEventListener("fetch",e=>e.respondWith(new Response("OK")))' || true
+          curl -sS -X DELETE \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/dummy" || true
 
-      - name: Install packages
+      - name: Install dependencies
         run: |
           npm install
-          cd worker
-          npm install
+          cd worker && npm install
 
-      # 1️⃣ Generate a `.env.production` right before building…
       - name: Emit .env.production
         run: |
-          cat <<EOF > .env.production
+          cat > .env.production <<EOF
           PLEX=${{ secrets.PLEX }}
           OVERSEERR=${{ secrets.OVERSEERR }}
           RADARR=${{ secrets.RADARR }}
@@ -85,117 +72,36 @@ jobs:
           UPTIME_KEY=${{ secrets.UPTIME_KEY }}
           EOF
 
-      # 2️⃣ Install & build your Worker (still “dry‐run” so you can inject secrets via Wrangler)
-      - name: Build Worker (dry-run)
+      - name: Build Worker (dry‐run)
+        working-directory: worker
+        env:
+          PLEX: ${{ secrets.PLEX }}
+          OVERSEERR: ${{ secrets.OVERSEERR }}
+          RADARR: ${{ secrets.RADARR }}
+          SONARR: ${{ secrets.SONARR }}
+          NZBGET: ${{ secrets.NZBGET }}
+          UN_SERVER: ${{ secrets.UN_SERVER }}
+          CLOUDFLARE: ${{ secrets.CLOUDFLARE }}
+          HA: ${{ secrets.HA }}
+          UPTIME_KEY: ${{ secrets.UPTIME_KEY }}
         run: |
-          cd worker
           npm ci
           npx wrangler deploy src/index.ts --outdir dist --dry-run
-        env:
-          # Wrangler will pick these up as bindings
-          PLEX:          ${{ secrets.PLEX }}
-          OVERSEERR:     ${{ secrets.OVERSEERR }}
-          RADARR:        ${{ secrets.RADARR }}
-          SONARR:        ${{ secrets.SONARR }}
-          NZBGET:        ${{ secrets.NZBGET }}
-          UN_SERVER:     ${{ secrets.UN_SERVER }}
-          CLOUDFLARE:    ${{ secrets.CLOUDFLARE }}
-          HA:            ${{ secrets.HA }}
-          UPTIME_KEY:    ${{ secrets.UPTIME_KEY }}
-          CF_ACCOUNT_ID: ${{ steps.fetch_account_id.outputs.account_id }}
-          CF_API_TOKEN:  ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
-      # 3️⃣ Install & build your Next.js status-page
-      - name: Install & Build status-page
+      - name: Publish Worker & inject secrets
+        working-directory: worker
         env:
-          # Next-on-Pages sees these at build-time
-          PLEX:          ${{ secrets.PLEX }}
-          OVERSEERR:     ${{ secrets.OVERSEERR }}
-          RADARR:        ${{ secrets.RADARR }}
-          SONARR:        ${{ secrets.SONARR }}
-          NZBGET:        ${{ secrets.NZBGET }}
-          UN_SERVER:     ${{ secrets.UN_SERVER }}
-          CLOUDFLARE:    ${{ secrets.CLOUDFLARE }}
-          HA:            ${{ secrets.HA }}
-          UPTIME_KEY:    ${{ secrets.UPTIME_KEY }}
-        run: |
-          npm ci
-          npx @cloudflare/next-on-pages
-
-      # 4️⃣ Terraform + durable objects + Pages deploy
-      - name: Remove durable objects bindings (temporary workaround)
-        continue-on-error: true
-        # This is a workaround to fix Cloudflare provider 4.x import crash when there's a durable object binding.
-        run: |
-          # Get bindings without durable objects
-          NEW_BINDINGS=$(curl --request GET --fail-with-body \
-               --url https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/uptimeflare_worker/settings \
-               --header 'Authorization: Bearer '$CLOUDFLARE_API_TOKEN \
-               --header 'Content-Type: application/json' | jq '.result.bindings | map(select(.type != "durable_object_namespace"))' -jc)
-          echo "New bindings: $NEW_BINDINGS"
-
-          # Remove durable objects bindings
-          curl --request PATCH --fail-with-body \
-               --url https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/uptimeflare_worker/settings \
-               --header 'Authorization: Bearer '$CLOUDFLARE_API_TOKEN \
-               -F 'settings={"bindings":'$NEW_BINDINGS'}'
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ steps.fetch_account_id.outputs.account_id }}
-
-      - name: Deploy using Terraform
-        run: |
-          terraform init
-      
-          # import just KV & Pages
-          KV_ID=$(curl -s \
-            --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-            "https://api.cloudflare.com/client/v4/accounts/$TF_VAR_CLOUDFLARE_ACCOUNT_ID/storage/kv/namespaces?per_page=100" \
-            | jq -r '.result[] | select(.title=="uptimeflare_kv") | .id')
-      
-          if [ -n "$KV_ID" ]; then
-            echo "Importing KV namespace…"
-            terraform import cloudflare_workers_kv_namespace.uptimeflare_kv \
-              "$TF_VAR_CLOUDFLARE_ACCOUNT_ID/$KV_ID"
-      
-            echo "Optionally importing Pages project (ignore errors)…"
-            terraform import cloudflare_pages_project.uptimeflare \
-              "$TF_VAR_CLOUDFLARE_ACCOUNT_ID/uptimeflare" || true
-          else
-            echo "No existing KV namespace; performing first-time apply."
-          fi
-      
-          terraform apply -auto-approve -input=false
-        env:
-          CLOUDFLARE_API_TOKEN:      ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          TF_VAR_CLOUDFLARE_ACCOUNT_ID: ${{ steps.fetch_account_id.outputs.account_id }}
-          TF_VAR_PLEX_URL:            ${{ secrets.PLEX }}
-          TF_VAR_OVERSEERR_URL:       ${{ secrets.OVERSEERR }}
-          TF_VAR_RADARR_URL:          ${{ secrets.RADARR }}
-          TF_VAR_SONARR_URL:          ${{ secrets.SONARR }}
-          TF_VAR_NZBGET_URL:          ${{ secrets.NZBGET }}
-          TF_VAR_UN_SERVER_URL:       ${{ secrets.UN_SERVER }}
-          TF_VAR_CLOUDFLARE_URL:      ${{ secrets.CLOUDFLARE }}
-          TF_VAR_HA_URL:              ${{ secrets.HA }}
-          TF_VAR_UPTIME_KEY:          ${{ secrets.UPTIME_KEY }}
-
-      - name: Publish Worker secrets
-        if: success()
-        env:
-          # Wrangler needs these
           CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ steps.fetch_account_id.outputs.account_id }}
-
-          # Your nine secrets become env‐vars here
-          PLEX:        ${{ secrets.PLEX }}
-          OVERSEERR:   ${{ secrets.OVERSEERR }}
-          RADARR:      ${{ secrets.RADARR }}
-          SONARR:      ${{ secrets.SONARR }}
-          NZBGET:      ${{ secrets.NZBGET }}
-          UN_SERVER:   ${{ secrets.UN_SERVER }}
-          CLOUDFLARE:  ${{ secrets.CLOUDFLARE }}
-          HA:          ${{ secrets.HA }}
-          UPTIME_KEY:  ${{ secrets.UPTIME_KEY }}
+          PLEX: ${{ secrets.PLEX }}
+          OVERSEERR: ${{ secrets.OVERSEERR }}
+          RADARR: ${{ secrets.RADARR }}
+          SONARR: ${{ secrets.SONARR }}
+          NZBGET: ${{ secrets.NZBGET }}
+          UN_SERVER: ${{ secrets.UN_SERVER }}
+          CLOUDFLARE: ${{ secrets.CLOUDFLARE }}
+          HA: ${{ secrets.HA }}
+          UPTIME_KEY: ${{ secrets.UPTIME_KEY }}
         run: |
           echo "$PLEX"       | npx wrangler secret put PLEX        --account-id $CF_ACCOUNT_ID --script uptimeflare_worker
           echo "$OVERSEERR"  | npx wrangler secret put OVERSEERR   --account-id $CF_ACCOUNT_ID --script uptimeflare_worker
@@ -206,43 +112,62 @@ jobs:
           echo "$CLOUDFLARE" | npx wrangler secret put CLOUDFLARE  --account-id $CF_ACCOUNT_ID --script uptimeflare_worker
           echo "$HA"         | npx wrangler secret put HA          --account-id $CF_ACCOUNT_ID --script uptimeflare_worker
           echo "$UPTIME_KEY" | npx wrangler secret put UPTIME_KEY  --account-id $CF_ACCOUNT_ID --script uptimeflare_worker
+          npx wrangler deploy src/index.ts --outdir dist
 
-      - name: Add durable objects bindings
-        run: |
-          # Get current bindings
-          CURRENT_BINDINGS=$(curl --request GET --fail-with-body \
-               --url https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/uptimeflare_worker/settings \
-               --header 'Authorization: Bearer '$CLOUDFLARE_API_TOKEN \
-               --header 'Content-Type: application/json' | jq '.result.bindings' -jc)
-          CURRENT_BINDINGS="${CURRENT_BINDINGS:1:-1}"
-          echo "Current bindings: $CURRENT_BINDINGS"
-
-          # Try migration first (required for the new durable object class, ignore failures)
-          curl --request PATCH \
-               --url https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/uptimeflare_worker/settings \
-               --header 'Authorization: Bearer '$CLOUDFLARE_API_TOKEN \
-               -F 'settings={"bindings":[{"type":"durable_object_namespace","name":"REMOTE_CHECKER_DO","class_name":"RemoteChecker"},'$CURRENT_BINDINGS'],"migrations":{"new_sqlite_classes":["RemoteChecker"],"new_tag":"v1"}}'
-
-          # Actually add the binding
-          curl --request PATCH --fail-with-body \
-               --url https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/uptimeflare_worker/settings \
-               --header 'Authorization: Bearer '$CLOUDFLARE_API_TOKEN \
-               -F 'settings={"bindings":[{"type":"durable_object_namespace","name":"REMOTE_CHECKER_DO","class_name":"RemoteChecker"},'$CURRENT_BINDINGS']}'
-
-          # By the ways enable logs
-          curl --request PATCH \
-               --url https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/uptimeflare_worker/script-settings \
-               --header 'Authorization: Bearer '$CLOUDFLARE_API_TOKEN \
-               --header 'Content-Type: application/json' \
-               -d '{"observability":{"enabled":true}}'
+      - name: Build Next.js status-page
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ steps.fetch_account_id.outputs.account_id }}
+          PLEX: ${{ secrets.PLEX }}
+          OVERSEERR: ${{ secrets.OVERSEERR }}
+          RADARR: ${{ secrets.RADARR }}
+          SONARR: ${{ secrets.SONARR }}
+          NZBGET: ${{ secrets.NZBGET }}
+          UN_SERVER: ${{ secrets.UN_SERVER }}
+          CLOUDFLARE: ${{ secrets.CLOUDFLARE }}
+          HA: ${{ secrets.HA }}
+          UPTIME_KEY: ${{ secrets.UPTIME_KEY }}
+        run: |
+          npm ci
+          npx @cloudflare/next-on-pages
 
-      # Currently Terraform Cloudflare provider doesn't support direct upload, use wrangler to upload instead.
-      - name: Upload pages
+      - name: Terraform Apply (KV & Pages)
+        env:
+          CLOUDFLARE_API_TOKEN:      ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          TF_VAR_CLOUDFLARE_ACCOUNT_ID: ${{ steps.fetch_account_id.outputs.account_id }}
+        run: |
+          terraform init
+          KV_ID=$(curl -sS \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            https://api.cloudflare.com/client/v4/accounts/$TF_VAR_CLOUDFLARE_ACCOUNT_ID/storage/kv/namespaces?per_page=100 \
+            | jq -r '.result[] | select(.title=="uptimeflare_kv") | .id')
+          if [[ -n "$KV_ID" ]]; then
+            terraform import cloudflare_workers_kv_namespace.uptimeflare_kv "$TF_VAR_CLOUDFLARE_ACCOUNT_ID/$KV_ID"
+            terraform import cloudflare_pages_project.uptimeflare "$TF_VAR_CLOUDFLARE_ACCOUNT_ID/uptimeflare" || true
+          fi
+          terraform apply -auto-approve -input=false
+
+      - name: Add durable-objects binding (workaround)
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN:      ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ steps.fetch_account_id.outputs.account_id }}
+        run: |
+          BINDINGS=$(curl -sS \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/uptimeflare_worker/settings \
+            | jq '.result.bindings | map(select(.type!="durable_object_namespace"))' -jc)
+          curl -sS -X PATCH \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -F "settings={\"bindings\":$BINDINGS}" \
+            https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/uptimeflare_worker/settings
+          curl -sS -X PATCH \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"observability":{"enabled":true}}' \
+            https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/uptimeflare_worker/script-settings
+
+      - name: Upload pages to Cloudflare Pages
+        env:
+          CF_API_TOKEN:    ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ steps.fetch_account_id.outputs.account_id }}
         run: |
           npx wrangler pages deploy .vercel/output/static --project-name uptimeflare
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ steps.fetch_account_id.outputs.account_id }}
