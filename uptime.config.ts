@@ -56,7 +56,7 @@ const workerConfig: WorkerConfig = {
       // [OPTIONAL] if specified, will call the check proxy to check the monitor, mainly for geo-specific checks
       // refer to docs https://github.com/lyc8503/UptimeFlare/wiki/Check-proxy-setup before setting this value
       // currently supports `worker://` and `http(s)://` proxies
-      // checkProxy: 'https://xxx.example.com OR worker://weur',
+      checkProxy: 'worker://enam',
       // [OPTIONAL] if true, the check will fallback to local if the specified proxy is down
       checkProxyFallback: true,
     },
@@ -69,6 +69,7 @@ const workerConfig: WorkerConfig = {
       hideLatencyChart: false,
       expectedCodes: [200],
       timeout: 10000,
+      checkProxy: 'worker://enam',
       checkProxyFallback: true,
     },
     {
@@ -80,6 +81,8 @@ const workerConfig: WorkerConfig = {
       hideLatencyChart: false,
       expectedCodes: [200],
       timeout: 10000,
+      checkProxy: 'worker://enam',
+      checkProxyFallback: true,
       headers: {
         'User-Agent': 'Uptimeflare',
         Authorization: 'Bearer '$UPPTIME_KEY,
@@ -94,6 +97,8 @@ const workerConfig: WorkerConfig = {
       hideLatencyChart: false,
       expectedCodes: [200],
       timeout: 10000,
+      checkProxy: 'worker://enam',
+      checkProxyFallback: true,
       headers: {
         'User-Agent': 'Uptimeflare',
         Authorization: 'Bearer '$UPPTIME_KEY,
@@ -108,6 +113,8 @@ const workerConfig: WorkerConfig = {
       hideLatencyChart: false,
       expectedCodes: [200],
       timeout: 10000,
+      checkProxy: 'worker://enam',
+      checkProxyFallback: true,
       headers: {
         'User-Agent': 'Uptimeflare',
         Authorization: 'Bearer '$UPPTIME_KEY,
@@ -122,6 +129,8 @@ const workerConfig: WorkerConfig = {
       hideLatencyChart: false,
       expectedCodes: [200],
       timeout: 10000,
+      checkProxy: 'worker://enam',
+      checkProxyFallback: true,
       headers: {
         'User-Agent': 'Uptimeflare',
         Authorization: 'Bearer '$UPPTIME_KEY,
@@ -136,6 +145,8 @@ const workerConfig: WorkerConfig = {
       hideLatencyChart: false,
       expectedCodes: [200],
       timeout: 10000,
+      checkProxy: 'worker://enam',
+      checkProxyFallback: true,
     },
     {
       id: 'cloudflare',
@@ -146,6 +157,8 @@ const workerConfig: WorkerConfig = {
       hideLatencyChart: false,
       expectedCodes: [200],
       timeout: 10000,
+      checkProxy: 'worker://enam',
+      checkProxyFallback: true,
     },
     {
       id: 'ha',
@@ -156,6 +169,8 @@ const workerConfig: WorkerConfig = {
       hideLatencyChart: false,
       expectedCodes: [200],
       timeout: 10000,
+      checkProxy: 'worker://enam',
+      checkProxyFallback: true,
       headers: {
         'User-Agent': 'Uptimeflare',
         Authorization: 'Bearer '$UPPTIME_KEY,
