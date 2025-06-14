@@ -171,7 +171,7 @@ jobs:
           TF_VAR_UN_SERVER_URL:  ${{ secrets.UN_SERVER }}
           TF_VAR_CLOUDFLARE_URL: ${{ secrets.CLOUDFLARE }}
           TF_VAR_HA_URL:         ${{ secrets.HA }}
-          TF_VAR_UPTIME_KEY:     ${{ secrets.UPTIME_KEY }
+          TF_VAR_UPTIME_KEY:     ${{ secrets.UPTIME_KEY }}
       # Terraform Cloudflare provider 4.x doesn't support durable objects, provider 5.x has unresolved issues blocking the deployment. (cloudflare/terraform-provider-cloudflare#5412)
       # So I have to manually add durable objects bindings here.
       - name: Add durable objects bindings
