@@ -1,7 +1,7 @@
 import type { Env } from './env'
-import { MaintenanceConfig, PageConfig, WorkerConfig } from './types/config'
-
 declare const env: Env
+
+import { MaintenanceConfig, PageConfig, WorkerConfig } from './types/config'
 const pageConfig: PageConfig = {
   // Title for your status page
   title: "Status Page",
