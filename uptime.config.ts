@@ -31,7 +31,7 @@ const workerConfig: WorkerConfig = {
       // `method` should be a valid HTTP Method
       method: 'POST',
       // `target` is a valid URL
-      target: $PLEX,
+      target: env.PLEX,
       // [OPTIONAL] `tooltip` is ONLY used at status page to show a tooltip
       tooltip: 'https connection to local plex server.',
       // [OPTIONAL] `statusPageLink` is ONLY used for clickable link at status page
@@ -45,7 +45,7 @@ const workerConfig: WorkerConfig = {
       // [OPTIONAL] headers to be sent
       headers: {
         'User-Agent': 'Uptimeflare',
-        Authorization: 'Bearer '$UPPTIME_KEY,
+        Authorization: 'Bearer ${env.UPPTIME_KEY}',
       },
       // [OPTIONAL] body to be sent
       // body: 'Hello, world!',
@@ -65,7 +65,7 @@ const workerConfig: WorkerConfig = {
       name: 'app.plex.tv',
       method: 'POST',
       target: 'https://app.plex.tv',
-      tooltip: 'Plex official webap.p',
+      tooltip: 'Plex official webapp',
       hideLatencyChart: false,
       expectedCodes: [200],
       timeout: 10000,
@@ -76,7 +76,7 @@ const workerConfig: WorkerConfig = {
       id: 'overseerr',
       name: 'Overseerr',
       method: 'POST',
-      target: $OVERSEERR,
+      target: env.OVERSEERR,
       tooltip: 'Media request webapp.',
       hideLatencyChart: false,
       expectedCodes: [200],
@@ -85,14 +85,14 @@ const workerConfig: WorkerConfig = {
       checkProxyFallback: true,
       headers: {
         'User-Agent': 'Uptimeflare',
-        Authorization: 'Bearer '$UPPTIME_KEY,
+        Authorization: 'Bearer ${env.UPPTIME_KEY}',
       },
     },
     {
       id: 'radarr',
       name: 'Movie API',
       method: 'POST',
-      target: $RADARR,
+      target: env.RADARR,
       tooltip: 'Backend movie API',
       hideLatencyChart: false,
       expectedCodes: [200],
@@ -101,14 +101,14 @@ const workerConfig: WorkerConfig = {
       checkProxyFallback: true,
       headers: {
         'User-Agent': 'Uptimeflare',
-        Authorization: 'Bearer '$UPPTIME_KEY,
+        Authorization: 'Bearer ${env.UPPTIME_KEY}',
       },
     },
     {
       id: 'sonarr',
       name: 'Episodes API',
       method: 'POST',
-      target: $SONARR,
+      target: env.SONARR,
       tooltip: 'Backend TV episode API',
       hideLatencyChart: false,
       expectedCodes: [200],
@@ -117,14 +117,14 @@ const workerConfig: WorkerConfig = {
       checkProxyFallback: true,
       headers: {
         'User-Agent': 'Uptimeflare',
-        Authorization: 'Bearer '$UPPTIME_KEY,
+        Authorization: 'Bearer ${env.UPPTIME_KEY}',
       },
     },
     {
       id: 'nzbget',
       name: 'Download Client',
       method: 'POST',
-      target: $NZBGET,
+      target: env.NZBGET,
       tooltip: 'Download client api.',
       hideLatencyChart: false,
       expectedCodes: [200],
@@ -133,14 +133,14 @@ const workerConfig: WorkerConfig = {
       checkProxyFallback: true,
       headers: {
         'User-Agent': 'Uptimeflare',
-        Authorization: 'Bearer '$UPPTIME_KEY,
+        Authorization: 'Bearer ${env.UPPTIME_KEY}',
       },
     },
     {
       id: 'unet',
       name: 'Download server',
       method: 'POST',
-      target: $UN_SERVER,
+      target: env.UN_SERVER,
       tooltip: 'Download server NTTP API',
       hideLatencyChart: false,
       expectedCodes: [200],
@@ -152,7 +152,7 @@ const workerConfig: WorkerConfig = {
       id: 'cloudflare',
       name: 'Cloudflare',
       method: 'POST',
-      target: $CLOUDFLARE,
+      target: env.CLOUDFLARE,
       tooltip: 'Domain host and DNS routeing',
       hideLatencyChart: false,
       expectedCodes: [200],
@@ -164,7 +164,7 @@ const workerConfig: WorkerConfig = {
       id: 'ha',
       name: 'Automations',
       method: 'POST',
-      target: $HA,
+      target: env.HA,
       tooltip: 'Automation server / dashboard',
       hideLatencyChart: false,
       expectedCodes: [200],
@@ -173,7 +173,7 @@ const workerConfig: WorkerConfig = {
       checkProxyFallback: true,
       headers: {
         'User-Agent': 'Uptimeflare',
-        Authorization: 'Bearer '$UPPTIME_KEY,
+        Authorization: 'Bearer ${env.UPPTIME_KEY}',
       },
     },
   ],
