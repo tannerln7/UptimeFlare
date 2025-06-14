@@ -179,6 +179,34 @@ jobs:
           TF_VAR_HA_URL:              ${{ secrets.HA }}
           TF_VAR_UPTIME_KEY:          ${{ secrets.UPTIME_KEY }}
 
+      - name: Publish Worker secrets
+        if: success()
+        env:
+          # Wrangler needs these
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ steps.fetch_account_id.outputs.account_id }}
+
+          # Your nine secrets become env‐vars here
+          PLEX:        ${{ secrets.PLEX }}
+          OVERSEERR:   ${{ secrets.OVERSEERR }}
+          RADARR:      ${{ secrets.RADARR }}
+          SONARR:      ${{ secrets.SONARR }}
+          NZBGET:      ${{ secrets.NZBGET }}
+          UN_SERVER:   ${{ secrets.UN_SERVER }}
+          CLOUDFLARE:  ${{ secrets.CLOUDFLARE }}
+          HA:          ${{ secrets.HA }}
+          UPTIME_KEY:  ${{ secrets.UPTIME_KEY }}
+        run: |
+          echo "$PLEX"       | npx wrangler secret put PLEX        --account-id $CF_ACCOUNT_ID --script uptimeflare_worker
+          echo "$OVERSEERR"  | npx wrangler secret put OVERSEERR   --account-id $CF_ACCOUNT_ID --script uptimeflare_worker
+          echo "$RADARR"     | npx wrangler secret put RADARR      --account-id $CF_ACCOUNT_ID --script uptimeflare_worker
+          echo "$SONARR"     | npx wrangler secret put SONARR      --account-id $CF_ACCOUNT_ID --script uptimeflare_worker
+          echo "$NZBGET"     | npx wrangler secret put NZBGET      --account-id $CF_ACCOUNT_ID --script uptimeflare_worker
+          echo "$UN_SERVER"  | npx wrangler secret put UN_SERVER   --account-id $CF_ACCOUNT_ID --script uptimeflare_worker
+          echo "$CLOUDFLARE" | npx wrangler secret put CLOUDFLARE  --account-id $CF_ACCOUNT_ID --script uptimeflare_worker
+          echo "$HA"         | npx wrangler secret put HA          --account-id $CF_ACCOUNT_ID --script uptimeflare_worker
+          echo "$UPTIME_KEY" | npx wrangler secret put UPTIME_KEY  --account-id $CF_ACCOUNT_ID --script uptimeflare_worker
+
       - name: Add durable objects bindings
         run: |
           # Get current bindings
