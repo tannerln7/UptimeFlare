@@ -97,7 +97,7 @@ jobs:
           CF_ACCOUNT_ID: ${{ steps.fetch_account_id.outputs.account_id }}
           CF_API_TOKEN:  ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
-      - name: Publish Worker & inject secrets
+      - name: inject secrets
         working-directory: worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -120,8 +120,6 @@ jobs:
           echo "$CLOUDFLARE" | npx wrangler secret put CLOUDFLARE
           echo "$HA"         | npx wrangler secret put HA
           echo "$UPTIME_KEY" | npx wrangler secret put UPTIME_KEY
-
-          npx wrangler deploy src/index.ts --outdir dist
 
       - name: Install & Build status-page
         run: |
