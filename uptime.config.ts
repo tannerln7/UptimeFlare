@@ -30,7 +30,7 @@ const workerConfig: WorkerConfig = {
       // `method` should be a valid HTTP Method
       method: 'POST',
       // `target` is a valid URL
-      target: env.PLEX!,
+      target: env.PLEX,
       // [OPTIONAL] `tooltip` is ONLY used at status page to show a tooltip
       tooltip: 'https connection to local plex server.',
       // [OPTIONAL] `statusPageLink` is ONLY used for clickable link at status page
@@ -44,7 +44,7 @@ const workerConfig: WorkerConfig = {
       // [OPTIONAL] headers to be sent
       headers: {
         'User-Agent': 'Uptimeflare',
-        Authorization: `Bearer ${env.UPPTIME_KEY!}`,
+        Authorization: `Bearer ${env.UPTIME_KEY}`,
       },
       // [OPTIONAL] body to be sent
       // body: 'Hello, world!',
@@ -75,7 +75,7 @@ const workerConfig: WorkerConfig = {
       id: 'overseerr',
       name: 'Overseerr',
       method: 'POST',
-      target: env.OVERSEERR!,
+      target: env.OVERSEERR,
       tooltip: 'Media request webapp.',
       hideLatencyChart: false,
       expectedCodes: [200],
@@ -84,14 +84,14 @@ const workerConfig: WorkerConfig = {
       checkProxyFallback: true,
       headers: {
         'User-Agent': 'Uptimeflare',
-        Authorization: `Bearer ${env.UPPTIME_KEY!}`,
+        Authorization: `Bearer ${env.UPTIME_KEY}`,
       },
     },
     {
       id: 'radarr',
       name: 'Movie API',
       method: 'POST',
-      target: env.RADARR!,
+      target: env.RADARR,
       tooltip: 'Backend movie API',
       hideLatencyChart: false,
       expectedCodes: [200],
@@ -100,14 +100,14 @@ const workerConfig: WorkerConfig = {
       checkProxyFallback: true,
       headers: {
         'User-Agent': 'Uptimeflare',
-        Authorization: `Bearer ${env.UPPTIME_KEY!}`,
+        Authorization: `Bearer ${env.UPTIME_KEY}`,
       },
     },
     {
       id: 'sonarr',
       name: 'Episodes API',
       method: 'POST',
-      target: env.SONARR!,
+      target: env.SONARR,
       tooltip: 'Backend TV episode API',
       hideLatencyChart: false,
       expectedCodes: [200],
@@ -116,14 +116,14 @@ const workerConfig: WorkerConfig = {
       checkProxyFallback: true,
       headers: {
         'User-Agent': 'Uptimeflare',
-        Authorization: `Bearer ${env.UPPTIME_KEY!}`,
+        Authorization: `Bearer ${env.UPTIME_KEY}`,
       },
     },
     {
       id: 'nzbget',
       name: 'Download Client',
       method: 'POST',
-      target: env.NZBGET!,
+      target: env.NZBGET,
       tooltip: 'Download client api.',
       hideLatencyChart: false,
       expectedCodes: [200],
@@ -132,14 +132,14 @@ const workerConfig: WorkerConfig = {
       checkProxyFallback: true,
       headers: {
         'User-Agent': 'Uptimeflare',
-        Authorization: `Bearer ${env.UPPTIME_KEY!}`,
+        Authorization: `Bearer ${env.UPTIME_KEY}`,
       },
     },
     {
       id: 'unet',
       name: 'Download server',
       method: 'POST',
-      target: env.UN_SERVER!,
+      target: env.UN_SERVER,
       tooltip: 'Download server NTTP API',
       hideLatencyChart: false,
       expectedCodes: [200],
@@ -151,7 +151,7 @@ const workerConfig: WorkerConfig = {
       id: 'cloudflare',
       name: 'Cloudflare',
       method: 'POST',
-      target: env.CLOUDFLARE!,
+      target: env.CLOUDFLARE,
       tooltip: 'Domain host and DNS routeing',
       hideLatencyChart: false,
       expectedCodes: [200],
@@ -163,7 +163,7 @@ const workerConfig: WorkerConfig = {
       id: 'ha',
       name: 'Automations',
       method: 'POST',
-      target: env.HA!,
+      target: env.HA,
       tooltip: 'Automation server / dashboard',
       hideLatencyChart: false,
       expectedCodes: [200],
@@ -172,7 +172,7 @@ const workerConfig: WorkerConfig = {
       checkProxyFallback: true,
       headers: {
         'User-Agent': 'Uptimeflare',
-        Authorization: `Bearer ${env.UPPTIME_KEY!}`,
+        Authorization: `Bearer ${env.UPTIME_KEY}`,
       },
     },
   ],
