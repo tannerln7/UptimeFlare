@@ -163,7 +163,15 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TF_VAR_CLOUDFLARE_ACCOUNT_ID: ${{ steps.fetch_account_id.outputs.account_id }}
-
+          TF_VAR_PLEX_URL:       ${{ secrets.PLEX }}
+          TF_VAR_OVERSEERR_URL:  ${{ secrets.OVERSEERR }}
+          TF_VAR_RADARR_URL:     ${{ secrets.RADARR }}
+          TF_VAR_SONARR_URL:     ${{ secrets.SONARR }}
+          TF_VAR_NZBGET_URL:     ${{ secrets.NZBGET }}
+          TF_VAR_UN_SERVER_URL:  ${{ secrets.UN_SERVER }}
+          TF_VAR_CLOUDFLARE_URL: ${{ secrets.CLOUDFLARE }}
+          TF_VAR_HA_URL:         ${{ secrets.HA }}
+          TF_VAR_UPTIME_KEY:     ${{ secrets.UPTIME_KEY }
       # Terraform Cloudflare provider 4.x doesn't support durable objects, provider 5.x has unresolved issues blocking the deployment. (cloudflare/terraform-provider-cloudflare#5412)
       # So I have to manually add durable objects bindings here.
       - name: Add durable objects bindings
