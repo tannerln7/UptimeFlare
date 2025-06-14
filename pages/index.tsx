@@ -10,7 +10,7 @@ import MonitorList from '@/components/MonitorList'
 import { Center, Divider, Text } from '@mantine/core'
 import MonitorDetail from '@/components/MonitorDetail'
 
-export const runtime = 'experimental-edge'
+export const runtime = 'nodejs'
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home({
